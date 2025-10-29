@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home · Silengzi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="wallpaper"></div>
+  <div class="page">
+    <header class="top">
+      <div class="brand">Silengzi-Home</div>
+      <div class="actions">
+        <button id="btn-theme" title="切换主题">🌗</button>
+        <button id="btn-settings" title="设置">⚙️</button>
+      </div>
+    </header>
+
+    <section class="search">
+      <div class="search-box">
+        <input id="search-input" placeholder="搜索或输入前缀（g:/b:/so:/zh:/gh:/npm:）" autofocus>
+        <button id="search-go" title="搜索">↵</button>
+      </div>
+      <div class="hints">前缀示例：g:react hooks、so:javascript fetch、gh:vercel/next.js</div>
+    </section>
+
+    <main class="main-layout">
+      <!-- 分类侧边栏 -->
+      <aside class="categories-sidebar">
+        <div class="sidebar-header">
+          <h3>分类</h3>
+          <div class="sidebar-actions">
+            <button id="btn-add-category" title="新建分类">＋</button>
+            <button id="btn-toggle-sidebar" title="折叠侧边栏">◀</button>
+          </div>
+        </div>
+        <div class="categories-tree" id="categories-tree">
+          <!-- 分类树将通过JavaScript动态生成 -->
+        </div>
+      </aside>
+
+      <!-- 主内容区 -->
+      <section class="content-area">
+        <!-- 快捷导航工具栏 -->
+        <div class="shortcuts-toolbar">
+          <div class="toolbar-left">
+            <div class="view-modes">
+              <button id="btn-grid-view" class="view-btn active" title="网格视图">⊞</button>
+              <button id="btn-list-view" class="view-btn" title="列表视图">☰</button>
+              <button id="btn-compact-view" class="view-btn" title="紧凑视图">⊡</button>
+            </div>
+            <div class="sort-options">
+              <select id="sort-select">
+                <option value="manual">手动排序</option>
+                <option value="recent">最近使用</option>
+                <option value="frequent">最常访问</option>
+                <option value="alphabetical">字母顺序</option>
+              </select>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <div class="search-filter">
+              <input id="shortcuts-search" placeholder="搜索快捷方式..." />
+            </div>
+            <div class="quick-filters">
+              <button id="btn-filter-recent" class="filter-btn" title="最近使用">最近</button>
+              <button id="btn-filter-frequent" class="filter-btn" title="最常访问">常用</button>
+              <button id="btn-filter-pinned" class="filter-btn" title="已置顶">置顶</button>
+            </div>
+            <button id="btn-batch-mode" title="批量模式">☑</button>
+            <button id="btn-import-bookmarks" title="导入HTML书签">📥</button>
+            <button id="btn-add-shortcut" title="新增快捷方式">＋</button>
+          </div>
+        </div>
+
+        <!-- 快捷方式容器 -->
+        <div class="shortcuts-container">
+          <div class="shortcuts-header">
+            <h3 id="current-category-title">所有快捷方式</h3>
+            <div class="shortcuts-stats">
+              <span id="shortcuts-count">0 个</span>
+            </div>
+          </div>
+          <div class="shortcuts-content">
+            <ul id="shortcuts" class="shortcuts-grid" aria-label="快捷方式网格"></ul>
+            <div id="shortcuts-empty" class="empty-state" style="display: none;">
+              <div class="empty-icon">🔗</div>
+              <div class="empty-text">暂无快捷方式</div>
+              <div class="empty-hint">点击 + 按钮添加新的快捷方式</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 辅助卡片区 -->
+      <aside class="auxiliary-cards">
+        <section class="card weather-card">
+        <div class="card-header">
+          <h3>天气</h3>
+          <div class="card-actions">
+            <button id="btn-refresh-weather" title="刷新">⟳</button>
+          </div>
+        </div>
+        <div class="weather-body">
+          <div class="weather-row">
+            <div id="weather-location" class="weather-location">定位中…</div>
+            <div id="weather-temp" class="weather-temp">--°</div>
+          </div>
+          <div id="weather-summary" class="weather-summary">—</div>
+          <div class="weather-inputs">
+            <input id="city-input" placeholder="输入城市（如 Shanghai）">
+            <button id="btn-set-city">设定</button>
+          </div>
+        </div>
+        </section>
+
+      <section class="card quote-card">
+        <div class="card-header">
+          <h3>每日一句</h3>
+          <div class="card-actions">
+            <button id="btn-refresh-quote" title="刷新">⟳</button>
+          </div>
+        </div>
+        <blockquote id="quote" class="quote">加载中…</blockquote>
+        <div id="quote-from" class="quote-from"></div>
+      </section>
+
+        <!-- 新闻资讯 -->
+        <section class="card news-card">
+          <div class="card-header">
+            <h3>新闻资讯</h3>
+            <div class="card-actions">
+              <select id="news-source" title="选择来源">
+                <option value="hn">Hacker News</option>
+                <option value="reddit-tech">Reddit / r/technology</option>
+                <option value="36kr">36氪</option>
+                <option value="sspai">少数派</option>
+                <option value="ifanr">爱范儿</option>
+                <option value="geekpark">极客公园</option>
+              </select>
+              <button id="btn-refresh-news" title="刷新">⟳</button>
+            </div>
+          </div>
+          <div class="news-body">
+            <ul id="news-list" class="news-list" aria-label="最新资讯"></ul>
+            <div id="news-empty" class="empty-state" style="display:none;">
+              <div class="empty-icon">📰</div>
+              <div class="empty-text">暂无新闻</div>
+              <div class="empty-hint">稍后再试或切换来源</div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="status-bar">
+      <div id="clock">--:--</div>
+      <div class="spacer"></div>
+      <div class="engine" id="engine-indicator">默认：Google</div>
+    </footer>
+  </div>
+
+  <dialog id="help">
+    <form method="dialog" class="settings-form">
+      <h3>帮助与快捷键</h3>
+      <div class="help-list">
+        <div><b>s</b>/<b>/</b> 聚焦搜索</div>
+        <div><b>?</b> 打开此帮助</div>
+        <div><b>Enter</b>/<b>Ctrl+Enter</b> 搜索（新标签）</div>
+        <div><b>></b> 命令模式，例如：<code>> theme light</code></div>
+        <div>命令：<code>theme [light|dark|toggle]</code>、<code>wallpaper &lt;url|none&gt;</code>、<code>blur &lt;0-30&gt;</code>、<code>add &lt;title&gt; &lt;url&gt; [icon]</code>、<code>export</code>、<code>import</code>、<code>settings</code></div>
+      </div>
+      <menu>
+        <button value="default">关闭</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="settings">
+    <form method="dialog" class="settings-form">
+      <h3>设置</h3>
+      <label class="row">
+        <span>壁纸 URL</span>
+        <input id="wallpaper-url" placeholder="https://… 或留空使用纯色" />
+      </label>
+      <label class="row">
+        <span>背景模糊（px）</span>
+        <input id="blur-amount" type="number" min="0" max="30" step="1" />
+      </label>
+      <label class="row">
+        <span>等宽字体</span>
+        <input id="monospace-toggle" type="checkbox" />
+      </label>
+      <div class="row">
+        <span>数据管理</span>
+        <button type="button" id="btn-clear-shortcuts" class="danger-btn">清空所有快捷方式</button>
+      </div>
+      <menu>
+        <button value="cancel">取消</button>
+        <button id="btn-save-settings" value="default">保存</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <template id="shortcut-item-tpl">
+    <li class="shortcut" draggable="true">
+      <div class="shortcut-checkbox" style="display: none;">
+        <input type="checkbox" class="shortcut-select" />
+      </div>
+      <a class="shortcut-link" target="_blank" rel="noopener"></a>
+      <div class="shortcut-actions">
+        <button class="shortcut-pin" title="置顶">📌</button>
+        <button class="shortcut-menu" title="编辑/删除">⋯</button>
+      </div>
+      <div class="shortcut-stats">
+        <span class="visit-count">0</span>
+        <span class="last-visited">--</span>
+      </div>
+    </li>
+  </template>
+
+  <template id="category-item-tpl">
+    <div class="category-item" draggable="true">
+      <div class="category-content">
+        <span class="category-icon">📁</span>
+        <span class="category-name"></span>
+        <span class="category-count">0</span>
+      </div>
+      <div class="category-actions">
+        <button class="category-menu" title="编辑分类">⋯</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- 分类管理对话框 -->
+  <dialog id="category-dialog">
+    <form method="dialog" class="settings-form">
+      <h3 id="category-dialog-title">新建分类</h3>
+      <label class="row">
+        <span>分类名称</span>
+        <input id="category-name-input" placeholder="输入分类名称" required />
+      </label>
+      <label class="row">
+        <span>分类图标</span>
+        <input id="category-icon-input" placeholder="📁" />
+      </label>
+      <label class="row">
+        <span>父分类</span>
+        <select id="category-parent-select">
+          <option value="">无（顶级分类）</option>
+        </select>
+      </label>
+      <menu>
+        <button type="button" id="btn-delete-category" style="display: none;">删除</button>
+        <button value="cancel">取消</button>
+        <button id="btn-save-category" value="default">保存</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- 批量操作对话框 -->
+  <dialog id="batch-dialog">
+    <form method="dialog" class="settings-form">
+      <h3>批量操作</h3>
+      <div class="batch-info">
+        <span id="batch-count">已选择 0 个项目</span>
+      </div>
+      <div class="batch-actions">
+        <button type="button" id="btn-batch-move">移动到分类</button>
+        <button type="button" id="btn-batch-pin">批量置顶</button>
+        <button type="button" id="btn-batch-unpin">取消置顶</button>
+        <button type="button" id="btn-batch-delete">批量删除</button>
+      </div>
+      <menu>
+        <button value="cancel">关闭</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- HTML书签导入对话框 -->
+  <dialog id="bookmark-import-dialog">
+    <form method="dialog" class="settings-form">
+      <h3>导入HTML书签</h3>
+      
+      <!-- 文件选择区域 -->
+      <div class="import-file-section">
+        <div class="file-drop-zone" id="file-drop-zone">
+          <div class="drop-zone-content">
+            <div class="drop-icon">📁</div>
+            <div class="drop-text">拖拽bookmarks.html文件到此处</div>
+            <div class="drop-hint">或点击选择文件</div>
+            <input type="file" id="bookmark-file-input" accept=".html,.htm" hidden />
+          </div>
+        </div>
+        <div class="file-info" id="file-info" style="display: none;">
+          <div class="file-name" id="file-name"></div>
+          <div class="file-size" id="file-size"></div>
+        </div>
+      </div>
+
+      <!-- 解析预览区域 -->
+      <div class="import-preview" id="import-preview" style="display: none;">
+        <h4>解析结果</h4>
+        <div class="preview-stats">
+          <div class="stat-item">
+            <span class="stat-label">书签数量：</span>
+            <span class="stat-value" id="bookmark-count">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">分类数量：</span>
+            <span class="stat-value" id="category-count">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">重复书签：</span>
+            <span class="stat-value" id="duplicate-count">0</span>
+          </div>
+        </div>
+        
+        <!-- 分类映射 -->
+        <div class="category-mapping">
+          <h4>分类映射</h4>
+          <div class="mapping-list" id="mapping-list">
+            <!-- 动态生成分类映射项 -->
+          </div>
+        </div>
+
+        <!-- 重复处理选项 -->
+        <div class="duplicate-handling">
+          <h4>重复书签处理</h4>
+          <label class="row">
+            <span>处理策略：</span>
+            <select id="duplicate-strategy">
+              <option value="skip">跳过重复</option>
+              <option value="overwrite">覆盖现有</option>
+              <option value="rename">重命名导入</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- 导入选项 -->
+        <div class="import-options">
+          <h4>导入选项</h4>
+          <label class="row">
+            <input type="checkbox" id="auto-create-categories" checked />
+            <span>自动创建分类</span>
+          </label>
+          <label class="row">
+            <input type="checkbox" id="fetch-favicons" checked />
+            <span>自动获取网站图标</span>
+          </label>
+          <label class="row">
+            <input type="checkbox" id="generate-tags" checked />
+            <span>基于域名生成标签</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 进度显示 -->
+      <div class="import-progress" id="import-progress" style="display: none;">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text" id="progress-text">准备导入...</div>
+      </div>
+
+      <!-- 导入结果 -->
+      <div class="import-result" id="import-result" style="display: none;">
+        <div class="result-success" id="result-success" style="display: none;">
+          <div class="result-icon">✅</div>
+          <div class="result-text">导入成功！</div>
+          <div class="result-details" id="success-details"></div>
+        </div>
+        <div class="result-error" id="result-error" style="display: none;">
+          <div class="result-icon">❌</div>
+          <div class="result-text">导入失败</div>
+          <div class="result-details" id="error-details"></div>
+        </div>
+      </div>
+
+      <menu>
+        <button type="button" id="btn-parse-file" disabled>解析文件</button>
+        <button type="button" id="btn-start-import" disabled>开始导入</button>
+        <button value="cancel">关闭</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <input id="import-file" type="file" accept="application/json" hidden />
+
+  <script src="app.js"></script>
+  <noscript>请启用 JavaScript 以使用起始页。</noscript>
+</body>
+</html>
+
+
