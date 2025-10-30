@@ -1847,3 +1847,4 @@
   const monoToggle = document.getElementById('monospace-toggle');
   if(monoToggle) monoToggle.checked = !!state.settings.mono;
 })();
+
