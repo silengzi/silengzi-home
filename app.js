@@ -243,7 +243,7 @@
     dom.categoriesTree.innerHTML = '';
     
     // 添加"所有分类"选项
-    const allItem = createCategoryNode({ id: null, name: '所有分类', icon: '📂', count: state.shortcuts.length });
+    const allItem = createCategoryNode({ id: null, name: '所有', icon: '📂', count: state.shortcuts.length });
     allItem.classList.add('active');
     dom.categoriesTree.appendChild(allItem);
     

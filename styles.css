@@ -71,13 +71,13 @@ body.mono{
 /* 主布局 */
 .main-layout{ 
   display: grid; 
-  grid-template-columns: 240px 1fr 280px; 
+  grid-template-columns: 180px 1fr 320px; 
   gap: 20px; 
   margin-top: 18px; 
   min-height: 600px;
 }
 @media (max-width: 1200px){ 
-  .main-layout{ grid-template-columns: 200px 1fr 240px; } 
+  .main-layout{ grid-template-columns: 150px 1fr 260px; } 
 }
 @media (max-width: 980px){ 
   .main-layout{ grid-template-columns: 1fr; gap: 16px; } 
