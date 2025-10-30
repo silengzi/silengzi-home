@@ -18,8 +18,28 @@
   --accent: #7c3aed;
 }
 
+:root {
+  --danger: #dc3545;
+  --danger-bg: rgba(220,53,69,0.13);
+  --danger-border: rgba(220,53,69,0.30);
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.10);
+  --success-border: rgba(34,197,94,0.30);
+}
+:root.light {
+  --danger: #dc3545;
+  --danger-bg: rgba(220,53,69,0.10);
+  --danger-border: rgba(220,53,69,0.18);
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.08);
+  --success-border: rgba(34,197,94,0.19);
+}
+
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+html {
+  background: var(--bg);
+}
 body{
   margin:0; font:14px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; color:var(--fg); background:var(--bg);
 }
@@ -28,7 +48,8 @@ body.mono{
 }
 
 #wallpaper{
-  position:fixed; inset:0; background:#0d1117 center/cover no-repeat; z-index:-1; filter:var(--wp-blur, blur(0px));
+  position:fixed; inset:0; background: var(--bg) center/cover no-repeat; z-index:-1; filter:var(--wp-blur, blur(0px));
+  transition: background 0.24s;
 }
 
 .page{ max-width:1100px; margin:0 auto; padding:24px 16px 40px; }
@@ -42,7 +63,7 @@ body.mono{
 .search-box{ display:flex; gap:8px; background:var(--card); border:1px solid var(--border); padding:10px 12px; border-radius:12px; backdrop-filter:saturate(140%) blur(6px); }
 .search-box input{ flex:1; background:transparent; color:var(--fg); border:none; outline:none; font-size:16px; }
 .search-box button{ background:var(--accent); color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; }
-.hints{ margin-top:6px; color:var(--sub); font-size:12px; }
+.hints{ margin-top:6px; color:var(--sub); font-size:12px; background:transparent; border-radius:7px; transition:color .2s, background .2s; }
 
 .help-list{ color:var(--sub); display:grid; gap:6px; }
 .help-list code{ color:var(--fg); }
@@ -729,15 +750,15 @@ body.mono{
   border-radius: 12px;
   text-align: center;
 }
-.result-success{
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
+.result-success {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success);
 }
-.result-error{
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+.result-error {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
 }
 .result-icon{
   font-size: 32px;
@@ -807,7 +828,16 @@ body.mono{
 .quote{ margin:6px 0 0; color:var(--fg); }
 .quote-from{ color:var(--sub); font-size:12px; margin-top:4px; }
 
-.status-bar{ display:flex; align-items:center; gap:12px; margin-top:18px; color:var(--sub); }
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  color: var(--sub);
+  background: transparent;
+  font-size: 13px;
+  transition: color .2s;
+}
 .status-bar .spacer{ flex:1; }
 
 dialog{ border:none; border-radius:12px; padding:0; background:var(--card); color:var(--fg); border:1px solid var(--border); }
@@ -819,14 +849,15 @@ dialog{ border:none; border-radius:12px; padding:0; background:var(--card); colo
 
 /* 危险按钮样式 */
 .danger-btn {
-  background: #dc3545;
-  color: white;
+  background: var(--danger);
+  color: #fff;
   border: none;
+  font-size: 14px;
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
   transition: background-color 0.2s;
+  font-weight: 600;
 }
 
 .danger-btn:hover {
@@ -984,8 +1015,8 @@ dialog#settings .settings-form menu button[value="cancel"]:hover {
   padding: 10px 30px;
 }
 dialog#settings .danger-btn {
-  background: #dc3545;
-  color: white;
+  background: var(--danger);
+  color: #fff;
   border: none;
   font-size: 14px;
   padding: 8px 18px;
