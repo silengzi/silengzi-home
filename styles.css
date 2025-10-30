@@ -892,4 +892,114 @@ dialog#help menu button:hover, dialog#help menu button:focus {
   transform: translateY(-2px) scale(1.04);
 }
 
+dialog#settings {
+  box-shadow: 0 8px 40px rgba(24,40,64,.30);
+  border-radius: 16px;
+  min-width: 370px;
+}
+dialog#settings .settings-form h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: var(--brand);
+  text-align: center;
+  letter-spacing: 1px;
+}
+dialog#settings .settings-form .row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px 12px;
+  gap: 16px;
+  margin-bottom: 12px;
+  align-items: center;
+  display: flex;
+}
+dialog#settings .settings-form .row span {
+  min-width: 90px;
+  font-size: 14px;
+  color: var(--sub);
+}
+dialog#settings .settings-form input[type="text"],
+dialog#settings .settings-form input[type="number"] {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  outline: none;
+  flex: 1;
+  font-size: 15px;
+  transition: border .15s;
+}
+dialog#settings .settings-form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.14);
+}
+dialog#settings .settings-form input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+dialog#settings .settings-form menu {
+  display: flex !important;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+dialog#settings .settings-form menu button {
+  padding: 10px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1.8px;
+  border: none;
+  transition: background .16s, box-shadow .18s, transform .12s;
+}
+dialog#settings .settings-form menu #btn-save-settings {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(111,69,239,.12);
+}
+dialog#settings .settings-form menu #btn-save-settings:hover,
+dialog#settings .settings-form menu #btn-save-settings:focus {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(38,99,235,0.10);
+  transform: translateY(-2px) scale(1.04);
+}
+dialog#settings .settings-form menu button[value="cancel"] {
+  background: var(--border);
+  color: var(--sub);
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+  padding: 10px 30px;
+}
+dialog#settings .settings-form menu button[value="cancel"]:hover {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+  padding: 10px 30px;
+}
+dialog#settings .danger-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.18s;
+  font-weight: 600;
+  margin-left: 8px;
+}
+dialog#settings .danger-btn:hover {
+  background: #c82333;
+}
+dialog#settings .danger-btn:active {
+  background: #bd2130;
+}
+
 
