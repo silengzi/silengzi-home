@@ -466,7 +466,7 @@ body.mono{
   display: flex; 
   flex-direction: column;
   gap: 8px; 
-  overflow: hidden;
+  overflow: visible;
 }
 
 
@@ -501,6 +501,54 @@ body.mono{
   display: block;
   font-size: 13px;
   line-height: 1.4;
+  position: relative;
+}
+
+/* 新闻标题悬浮气泡（自定义样式，适配暗/亮主题） */
+.news-title[data-tooltip]::after{
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  transform: translateY(-8px);
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  padding: 8px 10px;
+  border-radius: 8px;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 520px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 10;
+}
+
+.news-title[data-tooltip]::before{
+  content: '';
+  position: absolute;
+  left: 12px;
+  bottom: 100%;
+  transform: translateY(-2px);
+  width: 0; height: 0;
+  border: 6px solid transparent;
+  border-top-color: var(--border);
+  opacity: 0;
+  transition: opacity .15s ease;
+  z-index: 11;
+}
+
+.news-title[data-tooltip]:hover::after,
+.news-title[data-tooltip]:focus-visible::after{
+  opacity: 1;
+  transform: translateY(-10px);
+}
+
+.news-title[data-tooltip]:hover::before,
+.news-title[data-tooltip]:focus-visible::before{
+  opacity: 1;
 }
 
 .news-site{ 
