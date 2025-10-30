@@ -1230,4 +1230,31 @@ dialog#settings .danger-btn:active {
   border: 1px solid var(--border);
 }
 
+.toolbar-right > button,
+.toolbar-right .filter-btn {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background .13s, color .13s, border .13s;
+  box-shadow: none;
+  line-height: 1.2;
+}
+.toolbar-right > button:hover,
+.toolbar-right .filter-btn:hover,
+.toolbar-right > button.active,
+.toolbar-right .filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+#btn-add-shortcut,
+#btn-import-bookmarks {
+  font-weight: 700;
+}
+
 
