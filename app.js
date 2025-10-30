@@ -1095,112 +1095,80 @@
   // News
   async function getNewsFromSource(source){
     if(source === 'reddit-tech'){
-      // 并发直连与代理，谁先成功用谁
-      const redditUrl = 'https://www.reddit.com/r/technology/top.json?limit=12&t=day';
-      const proxyUrls = [
-        redditUrl,
-        `https://r.jina.ai/http/https://www.reddit.com/r/technology/top.json?limit=12&t=day`,
-        `https://cors.isomorphic-git.org/${redditUrl}`
-      ];
-      const tasks = proxyUrls.map(u => (async ()=>{
-        const res = await fetchWithTimeout(u, 7000);
-        if(!res.ok) throw new Error('bad status');
-        return await res.json();
-      })());
-      const data = await Promise.any(tasks);
+      const url = 'https://www.reddit.com/r/technology/top.json?limit=12&t=day';
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('network');
+      const data = await res.json();
       const items = (data.data?.children||[]).map(ch => ch.data).filter(Boolean);
-      const jsonResult = items.map(it => ({
-        title: it.title,
-        url: it.url_overridden_by_dest || `https://www.reddit.com${it.permalink}`,
-        site: 'Reddit'
-      }));
-      if(jsonResult && jsonResult.length) return jsonResult;
-      // 若 JSON 路径失败或为空，回退到 RSS
-      try{
-        const xml = await fetchRssWithProxies('https://www.reddit.com/r/technology/.rss');
-        const rssItems = parseRssItems(xml).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: 'Reddit' }));
-        if(rssItems.length) return rssItems;
-      }catch(_){ /* ignore, use below generic error */ }
-      throw new Error('reddit');
+      return items.map(it => ({ title: it.title, url: it.url_overridden_by_dest || `https://www.reddit.com${it.permalink}`, site: 'Reddit' }));
     }
-    if(source === '36kr' || source === 'sspai' || source === 'ifanr' || source === 'geekpark' || source === 'caixin' || source === 'wallstreetcn' || source === 'stcn' || source === 'ithome'){
-      const rssCandidates = {
-        '36kr': { site: '36氪', urls: ['https://36kr.com/feed','https://rsshub.app/36kr/news','https://rsshub.app/36kr/newsflashes'] },
-        'sspai': { site: '少数派', urls: ['https://sspai.com/feed','https://rsshub.app/sspai/index'] },
-        'ifanr': { site: '爱范儿', urls: ['https://www.ifanr.com/feed','https://rsshub.app/ifanr/app'] },
-        'geekpark': { site: '极客公园', urls: ['https://www.geekpark.net/rss','https://rsshub.app/geekpark/news'] },
-        'caixin': { site: '财新', urls: ['https://rsshub.app/caixin/latest'] },
-        'wallstreetcn': { site: '华尔街见闻', urls: ['https://rsshub.app/wallstreetcn/live'] },
-        'stcn': { site: '证券时报', urls: ['https://rsshub.app/stcn/news'] },
-        'ithome': { site: 'IT之家', urls: [ 'https://www.ithome.com/rss/', 'https://rsshub.app/ithome/index', 'https://rsshub.app/ithome/ranking', 'https://rsshub.app/ithome/dy' ] }
-      };
-      const info = rssCandidates[source];
-      // 并发尝试多个RSS地址（每个地址内部已通过 fetchRssWithProxies 进行多代理并发）
-      const xmlText = await (async () => {
-        const tasks = info.urls.map(u => fetchRssWithProxies(u));
-        try{ return await Promise.any(tasks); }
-        catch(_){
-          let lastErr;
-          for(const u of info.urls){
-            try{ const x = await fetchRssWithProxies(u); return x; }catch(e){ lastErr = e; }
-          }
-          throw lastErr || new Error('rss all failed');
-        }
-      })();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: info.site }));
+    if(source === 'ithome'){
+      const res = await fetch('https://e.juejin.cn/resources/ithome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offset: 0, limit: 10 })
+      });
+      if(!res.ok) throw new Error('network');
+      const raw = await res.json();
+      if(raw.code !== 200 || !Array.isArray(raw.data)) throw new Error('data');
+      return raw.data.map(item => ({ title: item.title, url: item.url, site: 'IT之家' }));
+    }
+    if(source === '36kr'){
+      const res = await fetch('https://rsshub.app/36kr/news');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '36氪' }));
       return items;
     }
-    // default: Hacker News（优先官方 Firebase API，更稳定；失败再回退 Algolia）
-    async function fetchHNViaFirebase(){
-      const base = 'https://hacker-news.firebaseio.com/v0';
-      const topIds = await fetchWithTimeout(`${base}/topstories.json`, 7000).then(r=>{ if(!r.ok) throw new Error('hn-top'); return r.json(); });
-      const ids = (topIds||[]).slice(0, 15);
-      const stories = await Promise.all(ids.map(id => fetchWithTimeout(`${base}/item/${id}.json`, 7000).then(r=>r.ok?r.json():null).catch(()=>null)));
-      const mapped = stories.filter(Boolean).map(s => ({ title: s.title, url: s.url || `https://news.ycombinator.com/item?id=${s.id}`, site: 'HN' }));
-      if(!mapped.length) throw new Error('hn-empty');
-      return mapped;
+    if(source === 'sspai'){
+      const res = await fetch('https://rsshub.app/sspai/index');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '少数派' }));
+      return items;
     }
-    async function fetchHNViaAlgolia(){
-      const res = await fetchWithTimeout('https://hn.algolia.com/api/v1/search?tags=front_page', 7000);
-      if(!res.ok) throw new Error('hn-algolia');
-      const data = await res.json();
-      const mapped = (data.hits||[]).map(h => ({ title: h.title, url: h.url || `https://news.ycombinator.com/item?id=${h.objectID}`, site: 'HN' }));
-      if(!mapped.length) throw new Error('hn-algolia-empty');
-      return mapped;
+    if(source === 'ifanr'){
+      const res = await fetch('https://rsshub.app/ifanr/app');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '爱范儿' }));
+      return items;
     }
-    try{
-      return await fetchHNViaFirebase();
-    }catch(_){
-      return await fetchHNViaAlgolia();
+    if(source === 'geekpark'){
+      const res = await fetch('https://rsshub.app/geekpark/news');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '极客公园' }));
+      return items;
     }
-  }
-
-  async function fetchRssWithProxies(url){
-    // 并发获取，谁先成功用谁，提升稳定性与速度
-    const makeProxyUrls = (u) => [
-      `https://r.jina.ai/http://${u.replace(/^https?:\/\//,'')}`,
-      `https://r.jina.ai/http/https://${u.replace(/^https?:\/\//,'')}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      `https://cors.isomorphic-git.org/${u}`
-    ];
-    const candidates = makeProxyUrls(url);
-    const tasks = candidates.map(u => (async ()=>{
-      const res = await fetchWithTimeout(u, 7000);
-      if(!res.ok) throw new Error('bad status');
-      return await res.text();
-    })());
-    try{
-      return await Promise.any(tasks);
-    }catch(_){
-      let lastErr;
-      for(const u of candidates){
-        try{
-          const res = await fetchWithTimeout(u, 12000);
-          if(res.ok){ return await res.text(); }
-        }catch(e){ lastErr = e; }
-      }
-      throw lastErr || new Error('RSS fetch failed');
+    if(source === 'caixin'){
+      const res = await fetch('https://rsshub.app/caixin/latest');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '财新' }));
+      return items;
     }
+    if(source === 'wallstreetcn'){
+      const res = await fetch('https://rsshub.app/wallstreetcn/live');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '华尔街见闻' }));
+      return items;
+    }
+    if(source === 'stcn'){
+      const res = await fetch('https://rsshub.app/stcn/news');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '证券时报' }));
+      return items;
+    }
+    // 默认Hacker News，只用官方API
+    const res = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+    if(!res.ok) throw new Error('network');
+    const topIds = await res.json();
+    const ids = (topIds||[]).slice(0, 15);
+    const stories = await Promise.all(ids.map(id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(r=>r.ok?r.json():null).catch(()=>null)));
+    return stories.filter(Boolean).map(s => ({ title: s.title, url: s.url || `https://news.ycombinator.com/item?id=${s.id}`, site: 'HN' }));
   }
 
   function parseRssItems(xmlString){
@@ -1879,5 +1847,3 @@
   const monoToggle = document.getElementById('monospace-toggle');
   if(monoToggle) monoToggle.checked = !!state.settings.mono;
 })();
-
-
