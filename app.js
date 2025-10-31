@@ -90,6 +90,7 @@
     default: { name: 'Google', build: q => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
     g: { name: 'Google', build: q => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
     b: { name: 'Bing', build: q => `https://www.bing.com/search?q=${encodeURIComponent(q)}` },
+    bat: { name: '百度', build: q => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}` },
     zh: { name: '知乎', build: q => `https://www.zhihu.com/search?type=content&q=${encodeURIComponent(q)}` },
     so: { name: 'StackOverflow', build: q => `https://stackoverflow.com/search?q=${encodeURIComponent(q)}` },
     gh: { name: 'GitHub', build: q => `https://github.com/search?q=${encodeURIComponent(q)}` },
@@ -1097,7 +1098,7 @@
   // Hotkeys & command mode
   let lastCtrlEnter = false;
   function handleHotkeys(e){
-    if(e.key==='/' || e.key==='s'){ e.preventDefault(); dom.searchInput.focus(); return; }
+    if(e.key==='/'){ e.preventDefault(); dom.searchInput.focus(); return; }
     if(e.key==='?' && !e.ctrlKey && !e.metaKey){ e.preventDefault(); dom.help.showModal(); return; }
     if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ lastCtrlEnter = true; handleSearch(); return; }
   }
