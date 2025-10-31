@@ -1121,7 +1121,7 @@
       return items;
     }
     if(source === 'sspai'){
-      const res = await fetch('https://rsshub.app/sspai/index');
+      const res = await fetch('https://sspai.com/feed');
       if(!res.ok) throw new Error('network');
       const xmlText = await res.text();
       const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '少数派' }));
@@ -1160,6 +1160,13 @@
       if(!res.ok) throw new Error('network');
       const xmlText = await res.text();
       const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '证券时报' }));
+      return items;
+    }
+    if(source === 'dongchedi'){
+      const res = await fetch('https://rsshub.app/dongchedi/news');
+      if(!res.ok) throw new Error('network');
+      const xmlText = await res.text();
+      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '懂车帝' }));
       return items;
     }
     // 默认Hacker News，只用官方API
