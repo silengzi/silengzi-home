@@ -24,11 +24,7 @@
     quote: document.getElementById('quote'),
     quoteFrom: document.getElementById('quote-from'),
     quoteRefresh: document.getElementById('btn-refresh-quote'),
-    // News
-    newsSource: document.getElementById('news-source'),
-    newsRefresh: document.getElementById('btn-refresh-news'),
-    newsList: document.getElementById('news-list'),
-    newsEmpty: document.getElementById('news-empty'),
+    
     shortcutTpl: document.getElementById('shortcut-item-tpl'),
     categoryTpl: document.getElementById('category-item-tpl'),
     // 新增的DOM元素
@@ -105,8 +101,7 @@
     categories: 'jike.categories.v2',
     settings: 'jike.settings.v2',
     weather: 'jike.weather.v2',
-    quote: 'jike.quote.v1',
-    news: 'jike.news.v1'
+    quote: 'jike.quote.v1'
   };
 
   const DEFAULT_CATEGORIES = [
@@ -151,7 +146,6 @@
   tickClock();
   setInterval(tickClock, 1000);
   refreshQuote();
-  refreshNews();
   locateAndLoadWeather();
 
   // Events
@@ -167,9 +161,7 @@
   dom.weatherRefresh.addEventListener('click', locateAndLoadWeather);
   dom.setCity.addEventListener('click', saveCityAndLoad);
   dom.quoteRefresh.addEventListener('click', refreshQuote);
-  // News
-  if(dom.newsRefresh) dom.newsRefresh.addEventListener('click', refreshNews);
-  if(dom.newsSource) dom.newsSource.addEventListener('change', () => refreshNews());
+  
   
   // 分类管理事件
   dom.addCategory.addEventListener('click', () => openCategoryDialog());
@@ -1092,174 +1084,7 @@
     dom.quoteFrom.textContent = any.author ? `— ${any.author}` : '';
   }
 
-  // News
-  async function getNewsFromSource(source){
-    if(source === 'reddit-tech'){
-      const url = 'https://www.reddit.com/r/technology/top.json?limit=12&t=day';
-      const res = await fetch(url);
-      if(!res.ok) throw new Error('network');
-      const data = await res.json();
-      const items = (data.data?.children||[]).map(ch => ch.data).filter(Boolean);
-      return items.map(it => ({ title: it.title, url: it.url_overridden_by_dest || `https://www.reddit.com${it.permalink}`, site: 'Reddit' }));
-    }
-    if(source === 'ithome'){
-      const res = await fetch('https://e.juejin.cn/resources/ithome', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offset: 0, limit: 10 })
-      });
-      if(!res.ok) throw new Error('network');
-      const raw = await res.json();
-      if(raw.code !== 200 || !Array.isArray(raw.data)) throw new Error('data');
-      return raw.data.map(item => ({ title: item.title, url: item.url, site: 'IT之家' }));
-    }
-    if(source === '36kr'){
-      const res = await fetch('https://rsshub.app/36kr/news');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '36氪' }));
-      return items;
-    }
-    if(source === 'sspai'){
-      const res = await fetch('https://sspai.com/feed');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '少数派' }));
-      return items;
-    }
-    if(source === 'ifanr'){
-      const res = await fetch('https://rsshub.app/ifanr/app');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '爱范儿' }));
-      return items;
-    }
-    if(source === 'geekpark'){
-      const res = await fetch('https://rsshub.app/geekpark/news');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '极客公园' }));
-      return items;
-    }
-    if(source === 'caixin'){
-      const res = await fetch('https://rsshub.app/caixin/latest');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '财新' }));
-      return items;
-    }
-    if(source === 'wallstreetcn'){
-      const res = await fetch('https://rsshub.app/wallstreetcn/live');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '华尔街见闻' }));
-      return items;
-    }
-    if(source === 'stcn'){
-      const res = await fetch('https://rsshub.app/stcn/news');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '证券时报' }));
-      return items;
-    }
-    if(source === 'dongchedi'){
-      const res = await fetch('https://rsshub.app/dongchedi/news');
-      if(!res.ok) throw new Error('network');
-      const xmlText = await res.text();
-      const items = parseRssItems(xmlText).slice(0, 12).map(it => ({ title: it.title, url: it.link, site: '懂车帝' }));
-      return items;
-    }
-    // 默认Hacker News，只用官方API
-    const res = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
-    if(!res.ok) throw new Error('network');
-    const topIds = await res.json();
-    const ids = (topIds||[]).slice(0, 15);
-    const stories = await Promise.all(ids.map(id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(r=>r.ok?r.json():null).catch(()=>null)));
-    return stories.filter(Boolean).map(s => ({ title: s.title, url: s.url || `https://news.ycombinator.com/item?id=${s.id}`, site: 'HN' }));
-  }
-
-  function parseRssItems(xmlString){
-    const out = [];
-    try{
-      const doc = new DOMParser().parseFromString(xmlString, 'application/xml');
-      const entries = Array.from(doc.querySelectorAll('item'));
-      if(entries.length){
-        entries.forEach(item => {
-          const title = (item.querySelector('title')?.textContent || '').trim();
-          const link = (item.querySelector('link')?.textContent || '').trim();
-          if(title && link){ out.push({ title, link }); }
-        });
-      } else {
-        // Atom feed
-        const atom = Array.from(doc.querySelectorAll('entry'));
-        atom.forEach(item => {
-          const title = (item.querySelector('title')?.textContent || '').trim();
-          const linkEl = item.querySelector('link[rel="alternate"], link');
-          const link = linkEl?.getAttribute('href') || '';
-          if(title && link){ out.push({ title, link }); }
-        });
-      }
-    }catch(_){ /* ignore */ }
-    return out;
-  }
-
-  function renderNewsList(items){
-    dom.newsList.innerHTML = '';
-    if(!items || items.length===0){
-      dom.newsEmpty.style.display = 'block';
-      return;
-    }
-    dom.newsEmpty.style.display = 'none';
-    items.slice(0, 10).forEach(item => {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = item.url; a.target = '_blank'; a.rel = 'noopener';
-      a.className = 'news-title';
-      a.textContent = item.title;
-      // 提示：使用自定义气泡（data-tooltip）并保留原生 title 作为兜底与可访问性
-      a.setAttribute('data-tooltip', item.title);
-      a.setAttribute('title', item.title);
-      const site = document.createElement('span');
-      site.className = 'news-site';
-      site.textContent = item.site ? ` · ${item.site}` : '';
-      li.appendChild(a);
-      li.appendChild(site);
-      dom.newsList.appendChild(li);
-    });
-  }
-
-  async function refreshNews(){
-    if(!dom.newsList) return;
-    const source = (dom.newsSource && dom.newsSource.value) || 'hn';
-    const cacheMap = loadJson(STORAGE_KEYS.news, {});
-    const cache = cacheMap && cacheMap[source];
-    const now = Date.now();
-    const TTL = 15 * 60 * 1000; // 15分钟
-
-    if(cache && Array.isArray(cache.items)){
-      renderNewsList(cache.items);
-    } else {
-      dom.newsList.innerHTML = '';
-      dom.newsEmpty.style.display = 'block';
-      dom.newsEmpty.querySelector('.empty-text').textContent = '加载中…';
-    }
-
-    const isFresh = cache && (now - (cache.ts || 0) < TTL);
-    (async () => {
-      try{
-        const items = await getNewsFromSource(source);
-        if(!isFresh){ renderNewsList(items); }
-        const nextCache = Object.assign({}, cacheMap, { [source]: { items, ts: Date.now() } });
-        persist(STORAGE_KEYS.news, nextCache);
-      }catch(_){
-        if(!(cache && Array.isArray(cache.items))){
-          dom.newsList.innerHTML = '';
-          dom.newsEmpty.style.display = 'block';
-          dom.newsEmpty.querySelector('.empty-text').textContent = '加载失败';
-        }
-      }
-    })();
-  }
+  
 
   // Clock
   function tickClock(){
