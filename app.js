@@ -1054,7 +1054,26 @@
 
     // 2) 其次 一言（中文）
     try{
-      const res2 = await fetchWithTimeout('https://v1.hitokoto.cn/?c=i&encode=json', 5000);
+      /**
+        c 的取值:
+          a 动画
+          b 漫画
+          c 游戏
+          d 文学
+          e 原创
+          f 来自网络
+          g 其他
+          h 影视
+          i 诗词
+          j 网易云
+          k 哲学
+          l 抖机灵
+          其他 作为 动画 类型处理
+
+          可选择多个分类，例如： ?c=a&c=c
+       */
+      // const res2 = await fetchWithTimeout('https://v1.hitokoto.cn/?c=i&encode=json', 5000);
+      const res2 = await fetchWithTimeout('https://v1.hitokoto.cn/?encode=json', 5000);
       if(res2.ok){
         const r2 = await res2.json();
         const content = r2.hitokoto || '—';
