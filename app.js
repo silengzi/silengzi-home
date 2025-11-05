@@ -19,8 +19,6 @@
     weatherTemp: document.getElementById('weather-temp'),
     weatherSummary: document.getElementById('weather-summary'),
     weatherRefresh: document.getElementById('btn-refresh-weather'),
-    cityInput: document.getElementById('city-input'),
-    setCity: document.getElementById('btn-set-city'),
     quote: document.getElementById('quote'),
     quoteFrom: document.getElementById('quote-from'),
     quoteRefresh: document.getElementById('btn-refresh-quote'),
@@ -125,7 +123,7 @@
     shortcuts: loadJson(STORAGE_KEYS.shortcuts, DEFAULT_SHORTCUTS),
     categories: loadJson(STORAGE_KEYS.categories, DEFAULT_CATEGORIES),
     settings: loadJson(STORAGE_KEYS.settings, { theme: 'dark', wallpaperUrl: '', blur: 0, mono: false }),
-    weather: loadJson(STORAGE_KEYS.weather, { city: '', lat: null, lon: null, last: 0, data: null }),
+    weather: loadJson(STORAGE_KEYS.weather, { lat: null, lon: null, city: '', lastLocationTime: 0, last: 0, data: null }),
     ui: {
       currentCategory: null,
       viewMode: 'grid',
@@ -159,8 +157,7 @@
   dom.saveSettings.addEventListener('click', saveSettings);
   dom.clearShortcuts.addEventListener('click', clearAllShortcuts);
   document.addEventListener('keydown', handleHotkeys);
-  dom.weatherRefresh.addEventListener('click', locateAndLoadWeather);
-  dom.setCity.addEventListener('click', saveCityAndLoad);
+  dom.weatherRefresh.addEventListener('click', () => locateAndLoadWeather(true));
   dom.quoteRefresh.addEventListener('click', refreshQuote);
   
   
@@ -959,63 +956,64 @@
   }
 
   // Weather
-  async function locateAndLoadWeather(){
-    if(state.weather.lat && state.weather.lon){
-      await loadWeather(state.weather.lat, state.weather.lon, state.weather.city || '');
-      return;
+  async function locateAndLoadWeather(forceRefresh = false){
+    const CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30天缓存
+    const now = Date.now();
+    
+    // 如果不是手动刷新，且有缓存且未过期，使用缓存
+    if(!forceRefresh && state.weather.lat && state.weather.lon && state.weather.lastLocationTime){
+      const cacheAge = now - state.weather.lastLocationTime;
+      if(cacheAge < CACHE_DURATION){
+        await loadWeather(state.weather.lat, state.weather.lon, state.weather.city || '定位');
+        return;
+      }
     }
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(async (pos)=>{
-        const { latitude, longitude } = pos.coords;
-        state.weather.lat = latitude; state.weather.lon = longitude;
-        persist(STORAGE_KEYS.weather, state.weather);
-        await loadWeather(latitude, longitude, '定位');
-      }, async ()=>{
-        dom.weatherLoc.textContent = '使用城市输入';
-      }, { enableHighAccuracy:false, maximumAge: 600000, timeout: 8000 });
-    } else {
-      dom.weatherLoc.textContent = '浏览器不支持定位';
-    }
-  }
-
-  async function saveCityAndLoad(){
-    const city = dom.cityInput.value.trim();
-    if(!city){ return; }
+    
+    // 需要重新获取位置（手动刷新或缓存过期）
+    dom.weatherRefresh.classList.add('refreshing');
     try{
-      const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`).then(r=>r.json());
-      if(geo && geo.results && geo.results.length){
-        const g = geo.results[0];
-        state.weather.city = g.name;
-        state.weather.lat = g.latitude; state.weather.lon = g.longitude;
+      const ipRes = await fetch('http://ip-api.com/json').then(r => r.json());
+      if(ipRes.status === 'success' && ipRes.lat && ipRes.lon){
+        const latitude = ipRes.lat;
+        const longitude = ipRes.lon;
+        const city = ipRes.city || '';
+        state.weather.lat = latitude;
+        state.weather.lon = longitude;
+        state.weather.city = city;
+        state.weather.lastLocationTime = now;
         persist(STORAGE_KEYS.weather, state.weather);
-        await loadWeather(g.latitude, g.longitude, g.name);
+        await loadWeather(latitude, longitude, city || '定位');
       } else {
-        dom.weatherSummary.textContent = '未找到城市';
+        dom.weatherLoc.textContent = '定位失败';
+        dom.weatherSummary.textContent = '无法获取位置信息';
+        dom.weatherRefresh.classList.remove('refreshing');
       }
     }catch(e){
+      dom.weatherLoc.textContent = '定位失败';
       dom.weatherSummary.textContent = '网络错误';
+      dom.weatherRefresh.classList.remove('refreshing');
     }
   }
 
   async function loadWeather(lat, lon, label){
     try{
       dom.weatherLoc.textContent = label || '—';
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`;
+      const location = `${lon},${lat}`;
+      const url = `https://mu65nn6vej.re.qweatherapi.com/v7/weather/now?location=${location}&key=483711463e24402bb13a5590e4f38fd9`;
       const data = await fetch(url).then(r=>r.json());
-      const temp = data?.current?.temperature_2m;
-      dom.weatherTemp.textContent = typeof temp==='number' ? `${Math.round(temp)}°` : '--°';
-      dom.weatherSummary.textContent = codeToText(data?.current?.weather_code);
+      if(data?.code === '200' && data?.now){
+        const temp = data.now.temp;
+        const text = data.now.text;
+        dom.weatherTemp.textContent = temp ? `${temp}°` : '--°';
+        dom.weatherSummary.textContent = text || '—';
+      } else {
+        dom.weatherSummary.textContent = '加载失败';
+      }
     }catch(e){
       dom.weatherSummary.textContent = '加载失败';
+    }finally{
+      dom.weatherRefresh.classList.remove('refreshing');
     }
-  }
-
-  function codeToText(code){
-    const map = {
-      0:'晴', 1:'多云', 2:'多云', 3:'阴', 45:'雾', 48:'霜雾', 51:'小毛雨', 53:'中毛雨', 55:'大毛雨',
-      61:'小雨', 63:'中雨', 65:'大雨', 71:'小雪', 73:'中雪', 75:'大雪', 80:'阵雨', 95:'雷阵雨'
-    };
-    return map[code] || '—';
   }
 
   // Quote
@@ -1031,6 +1029,7 @@
   }
 
   async function refreshQuote(){
+    dom.quoteRefresh.classList.add('refreshing');
     // 显示加载状态
     dom.quote.textContent = '加载中…';
     dom.quoteFrom.textContent = '';
@@ -1048,6 +1047,7 @@
         dom.quote.textContent = content;
         dom.quoteFrom.textContent = author ? `— ${author}` : '';
         persist(STORAGE_KEYS.quote, { content, author, ts: Date.now() });
+        dom.quoteRefresh.classList.remove('refreshing');
         return;
       }
     }catch(_){ /* ignore and fallback */ }
@@ -1062,6 +1062,7 @@
         dom.quote.textContent = content;
         dom.quoteFrom.textContent = author ? `— ${author}` : '';
         persist(STORAGE_KEYS.quote, { content, author, ts: Date.now() });
+        dom.quoteRefresh.classList.remove('refreshing');
         return;
       }
     }catch(_){ /* ignore and fallback */ }
@@ -1070,6 +1071,7 @@
     if(cached && cached.content){
       dom.quote.textContent = cached.content;
       dom.quoteFrom.textContent = cached.author ? `— ${cached.author}` : '';
+      dom.quoteRefresh.classList.remove('refreshing');
       return;
     }
 
@@ -1083,6 +1085,7 @@
     const any = localQuotes[Math.floor(Math.random()*localQuotes.length)];
     dom.quote.textContent = any.content;
     dom.quoteFrom.textContent = any.author ? `— ${any.author}` : '';
+    dom.quoteRefresh.classList.remove('refreshing');
   }
 
   

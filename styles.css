@@ -635,7 +635,12 @@ body.mono{
 .card-header{ display:flex; align-items:center; }
 .card-header h3{ margin:0; font-size:14px; font-weight:600; }
 .card-actions{ margin-left:auto; display:flex; gap:6px; }
-.card-actions button{ background:transparent; color:var(--fg); border:1px solid var(--border); padding:4px 8px; border-radius:8px; cursor:pointer; }
+.card-actions button{ background:transparent; color:var(--fg); border:1px solid var(--border); padding:4px 8px; border-radius:8px; cursor:pointer; transition: transform 0.2s; }
+.card-actions button.refreshing{ animation: rotate 1s linear infinite; }
+@keyframes rotate{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
+}
 
 /* 批量操作对话框 */
 .batch-info{
