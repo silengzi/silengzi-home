@@ -99,8 +99,7 @@
     shortcuts: 'jike.shortcuts.v2',
     categories: 'jike.categories.v2',
     settings: 'jike.settings.v2',
-    weather: 'jike.weather.v2',
-    quote: 'jike.quote.v1'
+    weather: 'jike.weather.v2'
   };
 
   const DEFAULT_CATEGORIES = [
@@ -1034,73 +1033,55 @@
     dom.quote.textContent = '加载中…';
     dom.quoteFrom.textContent = '';
 
-    // 读取本地缓存作为兜底
-    const cached = loadJson(STORAGE_KEYS.quote, null);
+    // 随机选择获取名言的方式，50%概率使用一言API，50%概率使用内置列表
+    const useHitokoto = Math.random() < 0.5;
+    
+    if (useHitokoto) {
+      // 使用一言API获取名言
+      try{
+        /**
+          c 的取值:
+            a 动画
+            b 漫画
+            c 游戏
+            d 文学
+            e 原创
+            f 来自网络
+            g 其他
+            h 影视
+            i 诗词
+            j 网易云
+            k 哲学
+            l 抖机灵
+            其他 作为 动画 类型处理
 
-    // 1) 首选 Quotable（英文）
-    try{
-      const res = await fetchWithTimeout('https://api.quotable.io/random?maxLength=120', 5000);
-      if(res.ok){
-        const r = await res.json();
-        const content = r.content || '—';
-        const author = r.author || '';
-        dom.quote.textContent = content;
-        dom.quoteFrom.textContent = author ? `— ${author}` : '';
-        persist(STORAGE_KEYS.quote, { content, author, ts: Date.now() });
-        dom.quoteRefresh.classList.remove('refreshing');
-        return;
-      }
-    }catch(_){ /* ignore and fallback */ }
-
-    // 2) 其次 一言（中文）
-    try{
-      /**
-        c 的取值:
-          a 动画
-          b 漫画
-          c 游戏
-          d 文学
-          e 原创
-          f 来自网络
-          g 其他
-          h 影视
-          i 诗词
-          j 网易云
-          k 哲学
-          l 抖机灵
-          其他 作为 动画 类型处理
-
-          可选择多个分类，例如： ?c=a&c=c
-       */
-      // const res2 = await fetchWithTimeout('https://v1.hitokoto.cn/?c=i&encode=json', 5000);
-      const res2 = await fetchWithTimeout('https://v1.hitokoto.cn/?encode=json', 5000);
-      if(res2.ok){
-        const r2 = await res2.json();
-        const content = r2.hitokoto || '—';
-        const author = r2.from || '';
-        dom.quote.textContent = content;
-        dom.quoteFrom.textContent = author ? `— ${author}` : '';
-        persist(STORAGE_KEYS.quote, { content, author, ts: Date.now() });
-        dom.quoteRefresh.classList.remove('refreshing');
-        return;
-      }
-    }catch(_){ /* ignore and fallback */ }
-
-    // 3) 再次兜底：使用本地缓存或内置列表
-    if(cached && cached.content){
-      dom.quote.textContent = cached.content;
-      dom.quoteFrom.textContent = cached.author ? `— ${cached.author}` : '';
-      dom.quoteRefresh.classList.remove('refreshing');
-      return;
+            可选择多个分类，例如： ?c=a&c=c
+        */
+        // const res2 = await fetchWithTimeout('https://v1.hitokoto.cn/?c=i&encode=json', 5000);
+        const res2 = await fetchWithTimeout('https://v1.hitokoto.cn/?encode=json', 5000);
+        if(res2.ok){
+          const r2 = await res2.json();
+          const content = r2.hitokoto || '—';
+          const author = r2.from || '';
+          dom.quote.textContent = content;
+          dom.quoteFrom.textContent = author ? `— ${author}` : '';
+          dom.quoteRefresh.classList.remove('refreshing');
+          return;
+        }
+      }catch(_){ /* ignore and fallback to local quotes */ }
     }
 
-    const localQuotes = [
-      { content: 'Stay hungry, stay foolish.', author: 'Steve Jobs' },
-      { content: 'Talk is cheap. Show me the code.', author: 'Linus Torvalds' },
-      { content: '不积跬步，无以至千里。', author: '荀子' },
-      { content: '千里之行，始于足下。', author: '老子' },
-      { content: '知之者不如好之者，好之者不如乐之者。', author: '孔子' }
-    ];
+    // 使用内置列表作为主要选择或兜底
+    // 从quotes.js文件中获取名言列表
+    const localQuotes = typeof window !== 'undefined' && window.quotes
+    console.log("localQuotes: ", localQuotes)
+    //  ? window.quotes : [
+    //   { content: 'Stay hungry, stay foolish.', author: 'Steve Jobs' },
+    //   { content: 'Talk is cheap. Show me the code.', author: 'Linus Torvalds' },
+    //   { content: '不积跬步，无以至千里。', author: '荀子' },
+    //   { content: '千里之行，始于足下。', author: '老子' },
+    //   { content: '知之者不如好之者，好之者不如乐之者。', author: '孔子' }
+    // ];
     const any = localQuotes[Math.floor(Math.random()*localQuotes.length)];
     dom.quote.textContent = any.content;
     dom.quoteFrom.textContent = any.author ? `— ${any.author}` : '';
@@ -1589,13 +1570,24 @@
           }
           
           // 处理图标与站点favicon
+          // 优先使用书签文件中的base64图标
           let icon = '🔗';
+          let iconUrl = null;
+          
           if (bookmark.icon) {
-            if (!bookmark.icon.startsWith('data:')) {
+            if (bookmark.icon.startsWith('data:')) {
+              // 如果是base64格式的图标，直接使用
+              iconUrl = bookmark.icon;
+            } else {
+              // 如果不是base64，作为emoji图标
               icon = bookmark.icon;
             }
           }
-          const iconUrl = getFaviconUrl(bookmark.url);
+          
+          // 如果没有图标且启用了自动获取，才尝试网络请求
+          if (!iconUrl && fetchFavicons) {
+            iconUrl = getFaviconUrl(bookmark.url);
+          }
           
           // 处理标题
           let title = bookmark.title;
