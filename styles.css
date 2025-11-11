@@ -1304,3 +1304,134 @@ dialog#settings .danger-btn:active {
 }
 
 
+/* 分类对话框样式 */
+#category-dialog {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  border-radius: 16px;
+  min-width: 380px;
+  max-width: 520px;
+  background: var(--bg);
+}
+#category-dialog .settings-form {
+  padding: 22px 18px 16px 18px;
+  background: var(--bg);
+}
+#category-dialog .settings-form h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--brand);
+  text-align: center;
+  letter-spacing: 1px;
+}
+#category-dialog .settings-form .row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px 14px;
+  gap: 14px;
+  margin-bottom: 12px;
+  align-items: center;
+  display: flex;
+  transition: border-color .15s, box-shadow .15s;
+}
+#category-dialog .settings-form .row:hover {
+  border-color: var(--accent);
+}
+#category-dialog .settings-form .row span {
+  min-width: 80px;
+  font-size: 14px;
+  color: var(--sub);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+#category-dialog .settings-form input,
+#category-dialog .settings-form select {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 12px;
+  outline: none;
+  flex: 1;
+  font-size: 14px;
+  transition: border .15s, box-shadow .15s;
+}
+#category-dialog .settings-form input:focus,
+#category-dialog .settings-form select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.3);
+}
+#category-dialog .settings-form select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239aa3af' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+#category-dialog .settings-form menu {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 0;
+}
+#category-dialog .settings-form menu button {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 1px;
+  border: none;
+  transition: background .16s, box-shadow .18s, transform .12s;
+}
+#category-dialog .settings-form menu #btn-save-category {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(111,69,239,0.3);
+  margin-left: auto;
+}
+#category-dialog .settings-form menu #btn-save-category:hover,
+#category-dialog .settings-form menu #btn-save-category:focus {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(38,99,235,0.4);
+  transform: translateY(-2px) scale(1.04);
+}
+#category-dialog .settings-form menu button[value="cancel"] {
+  background: var(--border);
+  color: var(--sub);
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+}
+#category-dialog .settings-form menu button[value="cancel"]:hover {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+#category-dialog .settings-form menu #btn-delete-category {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.18s, transform .12s;
+  font-weight: 600;
+  margin-right: auto;
+  box-shadow: 0 2px 8px rgba(220,53,69,0.4);
+}
+#category-dialog .settings-form menu #btn-delete-category:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220,53,69,0.5);
+}
+#category-dialog .settings-form menu #btn-delete-category:active {
+  background: #bd2130;
+  transform: translateY(0);
+}
+

@@ -117,6 +117,18 @@
     { id: 'tools', name: '工具', icon: '🔧', color: '#f59e0b', parentId: null, order: 2 },
     { id: 'entertainment', name: '娱乐', icon: '🎮', color: '#ef4444', parentId: null, order: 3 }
   ];
+  //   // 分类图标设计
+  // { id: 'all', name: '所有', icon: '🗂️', color: '#64748b', parentId: null, order: 0 },
+  // { id: 'bookmarks', name: '书签栏', icon: '🔖', color: '#8b5cf6', parentId: null, order: 1 },
+  // { id: 'platform', name: '平台', icon: '🚀', color: '#3b82f6', parentId: null, order: 2 },
+  // { id: 'official', name: '开发官网', icon: '🏢', color: '#1e40af', parentId: null, order: 3 },
+  // { id: 'ui-lib', name: 'UI库', icon: '🎨', color: '#ec4899', parentId: null, order: 4 },
+  // { id: 'resources', name: '资源', icon: '📦', color: '#f97316', parentId: null, order: 5 },
+  // { id: 'articles', name: '文章', icon: '📄', color: '#3b82f6', parentId: null, order: 6 },
+  // { id: 'personal', name: '个人', icon: '👤', color: '#8b5cf6', parentId: null, order: 7 },
+  // { id: 'study', name: '学习', icon: '📚', color: '#10b981', parentId: null, order: 8 },
+  // { id: 'blog', name: '博客', icon: '✍️', color: '#f97316', parentId: null, order: 9 },
+  // { id: 'sinda', name: 'sinda', icon: '🌟', color: '#a855f7', parentId: null, order: 10 }
 
   const DEFAULT_SHORTCUTS = [
     { id: 'gh', title: 'GitHub', url: 'https://github.com', icon: '🐙', categoryId: 'dev', tags: ['代码', '开源'], order: 0, pinned: false, visitCount: 0, lastVisited: null },
@@ -270,12 +282,19 @@
     const name = content.querySelector('.category-name');
     const count = content.querySelector('.category-count');
     const menu = div.querySelector('.category-menu');
+    const actions = div.querySelector('.category-actions');
     
     icon.textContent = category.icon || '📁';
     name.textContent = category.name;
     count.textContent = category.count || 0;
     
     div.dataset.id = category.id;
+
+    // 禁用“所有”分类的拖拽与菜单
+    if (category.id === null || category.id === undefined || category.id === '') {
+      div.setAttribute('draggable', 'false');
+      if (actions) actions.style.display = 'none';
+    }
     
     // 点击选择分类
     div.addEventListener('click', (e) => {
@@ -331,6 +350,8 @@
     
     // 更新父分类选择
     updateParentCategorySelect(categoryId);
+    // 预选当前父分类
+    dom.categoryParentSelect.value = (category && category.parentId) ? category.parentId : '';
     
     // 显示/隐藏删除按钮
     dom.deleteCategory.style.display = isEdit ? 'block' : 'none';
@@ -339,6 +360,8 @@
     dom.categoryDialog.dataset.editingId = categoryId || '';
     
     dom.categoryDialog.showModal();
+    // 打开后聚焦到名称输入
+    setTimeout(() => dom.categoryNameInput && dom.categoryNameInput.focus(), 0);
   }
 
   function updateParentCategorySelect(excludeId = null){
@@ -428,6 +451,11 @@
     let draggingCategoryId = null;
     
     dom.categoriesTree.querySelectorAll('.category-item').forEach(item => {
+      // 只对真实分类（有有效id）启用拖拽排序
+      if (!item.dataset.id) {
+        item.setAttribute('draggable', 'false');
+        return;
+      }
       item.addEventListener('dragstart', e => {
         draggingCategoryId = item.dataset.id;
         e.dataTransfer.effectAllowed = 'move';
@@ -441,7 +469,7 @@
       item.addEventListener('drop', e => {
         e.preventDefault();
         const targetId = item.dataset.id;
-        if (!draggingCategoryId || draggingCategoryId === targetId) return;
+        if (!draggingCategoryId || draggingCategoryId === targetId || !targetId) return;
         
         // 重新排序分类
         const fromIndex = state.categories.findIndex(c => c.id === draggingCategoryId);
