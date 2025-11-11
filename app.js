@@ -694,11 +694,30 @@
   }
 
   function toggleFilter(filter){
+    // 定义互斥的过滤器组
+    const exclusiveFilters = ['recent', 'frequent', 'pinned'];
+    const isExclusive = exclusiveFilters.includes(filter);
+    
     const index = state.ui.activeFilters.indexOf(filter);
     if (index > -1) {
+      // 如果已选中，则取消选中
       state.ui.activeFilters.splice(index, 1);
       document.getElementById(`btn-filter-${filter}`).classList.remove('active');
     } else {
+      // 如果未选中，则选中
+      // 如果是互斥过滤器，先取消其他互斥过滤器的选中状态
+      if (isExclusive) {
+        exclusiveFilters.forEach(otherFilter => {
+          if (otherFilter !== filter) {
+            const otherIndex = state.ui.activeFilters.indexOf(otherFilter);
+            if (otherIndex > -1) {
+              state.ui.activeFilters.splice(otherIndex, 1);
+              document.getElementById(`btn-filter-${otherFilter}`).classList.remove('active');
+            }
+          }
+        });
+      }
+      // 添加当前过滤器
       state.ui.activeFilters.push(filter);
       document.getElementById(`btn-filter-${filter}`).classList.add('active');
     }
