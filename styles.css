@@ -1121,4 +1121,153 @@ dialog#settings .danger-btn:active {
   font-weight: 700;
 }
 
+/* 快捷方式编辑对话框样式 */
+#shortcut-dialog {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  border-radius: 16px;
+  min-width: 420px;
+  max-width: 500px;
+  background: var(--bg);
+}
+
+#shortcut-dialog .settings-form {
+  padding: 24px 20px 18px 20px;
+  background: var(--bg);
+}
+
+#shortcut-dialog .settings-form h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--brand);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+#shortcut-dialog .settings-form .row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px 14px;
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: center;
+  display: flex;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+#shortcut-dialog .settings-form .row:hover {
+  border-color: var(--accent);
+}
+
+#shortcut-dialog .settings-form .row span {
+  min-width: 70px;
+  font-size: 14px;
+  color: var(--sub);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+#shortcut-dialog .settings-form input[type="text"],
+#shortcut-dialog .settings-form input[type="url"],
+#shortcut-dialog .settings-form select {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 12px;
+  outline: none;
+  flex: 1;
+  font-size: 14px;
+  transition: border .15s, box-shadow .15s;
+}
+
+#shortcut-dialog .settings-form input:focus,
+#shortcut-dialog .settings-form select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.3);
+}
+
+#shortcut-dialog .settings-form select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239aa3af' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+#shortcut-dialog .settings-form menu {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 0;
+}
+
+#shortcut-dialog .settings-form menu button {
+  padding: 10px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 1px;
+  border: none;
+  transition: background .16s, box-shadow .18s, transform .12s;
+}
+
+#shortcut-dialog .settings-form menu #btn-save-shortcut {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(111,69,239,0.3);
+  margin-left: auto;
+}
+
+#shortcut-dialog .settings-form menu #btn-save-shortcut:hover,
+#shortcut-dialog .settings-form menu #btn-save-shortcut:focus {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(38,99,235,0.4);
+  transform: translateY(-2px) scale(1.04);
+}
+
+#shortcut-dialog .settings-form menu button[value="cancel"] {
+  background: var(--border);
+  color: var(--sub);
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+}
+
+#shortcut-dialog .settings-form menu button[value="cancel"]:hover {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+#shortcut-dialog .settings-form menu #btn-delete-shortcut {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.18s, transform .12s;
+  font-weight: 600;
+  margin-right: auto;
+  box-shadow: 0 2px 8px rgba(220,53,69,0.4);
+}
+
+#shortcut-dialog .settings-form menu #btn-delete-shortcut:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220,53,69,0.5);
+}
+
+#shortcut-dialog .settings-form menu #btn-delete-shortcut:active {
+  background: #bd2130;
+  transform: translateY(0);
+}
+
 

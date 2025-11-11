@@ -48,6 +48,15 @@
     categoryParentSelect: document.getElementById('category-parent-select'),
     saveCategory: document.getElementById('btn-save-category'),
     deleteCategory: document.getElementById('btn-delete-category'),
+    shortcutDialog: document.getElementById('shortcut-dialog'),
+    shortcutDialogTitle: document.getElementById('shortcut-dialog-title'),
+    shortcutTitleInput: document.getElementById('shortcut-title-input'),
+    shortcutUrlInput: document.getElementById('shortcut-url-input'),
+    shortcutIconInput: document.getElementById('shortcut-icon-input'),
+    shortcutTagsInput: document.getElementById('shortcut-tags-input'),
+    shortcutCategorySelect: document.getElementById('shortcut-category-select'),
+    saveShortcut: document.getElementById('btn-save-shortcut'),
+    deleteShortcut: document.getElementById('btn-delete-shortcut'),
     batchDialog: document.getElementById('batch-dialog'),
     batchCount: document.getElementById('batch-count'),
     batchMove: document.getElementById('btn-batch-move'),
@@ -167,6 +176,10 @@
   dom.addCategory.addEventListener('click', () => openCategoryDialog());
   dom.saveCategory.addEventListener('click', saveCategory);
   dom.deleteCategory.addEventListener('click', deleteCategory);
+  
+  // 快捷方式编辑事件
+  dom.saveShortcut.addEventListener('click', saveShortcut);
+  dom.deleteShortcut.addEventListener('click', deleteShortcut);
   
   // 视图和排序事件
   dom.gridView.addEventListener('click', () => setViewMode('grid'));
@@ -816,76 +829,142 @@
   }
 
   function onAddShortcut(){
-    const title = prompt('名称'); if(!title) return;
-    const url = prompt('链接 (https://...)'); if(!url) return;
-    const icon = prompt('图标（Emoji，可留空）') || '🔗';
-    const tags = prompt('标签（用逗号分隔，可留空）') || '';
+    // 清空编辑ID，表示这是新建
+    dom.shortcutDialog.dataset.editingId = '';
     
-    const id = `sc-${Date.now()}`;
-    const newShortcut = {
-      id,
-      title,
-      url,
-      icon,
-      iconUrl: getFaviconUrl(url),
-      categoryId: state.ui.currentCategory,
-      tags: tags.split(',').map(t => t.trim()).filter(t => t),
-      order: state.shortcuts.length,
-      pinned: false,
-      visitCount: 0,
-      lastVisited: null
-    };
+    // 填充表单（清空）
+    dom.shortcutDialogTitle.textContent = '新建快捷方式';
+    dom.shortcutTitleInput.value = '';
+    dom.shortcutUrlInput.value = '';
+    dom.shortcutIconInput.value = '🔗';
+    dom.shortcutTagsInput.value = '';
     
-    state.shortcuts.push(newShortcut);
-    persist(STORAGE_KEYS.shortcuts, state.shortcuts);
-    renderShortcuts();
-    renderCategories();
+    // 更新分类选择下拉框
+    dom.shortcutCategorySelect.innerHTML = '<option value="">无分类</option>';
+    state.categories.forEach(category => {
+      const option = document.createElement('option');
+      option.value = category.id;
+      option.textContent = category.name;
+      // 默认选中当前分类
+      if (category.id === state.ui.currentCategory) {
+        option.selected = true;
+      }
+      dom.shortcutCategorySelect.appendChild(option);
+    });
+    
+    // 新建模式下隐藏删除按钮
+    dom.deleteShortcut.style.display = 'none';
+    
+    // 显示对话框
+    dom.shortcutDialog.showModal();
   }
 
   function openShortcutMenu(id){
     const sc = state.shortcuts.find(s => s.id===id);
     if(!sc) return;
-    const action = prompt('输入操作: edit / delete / move', 'edit');
-    if(action==='delete'){
-      if(confirm('确定要删除这个快捷方式吗？')){
-        state.shortcuts = state.shortcuts.filter(s => s.id!==id);
-        persist(STORAGE_KEYS.shortcuts, state.shortcuts);
-        renderShortcuts();
-        renderCategories();
+    
+    // 存储当前编辑的快捷方式ID
+    dom.shortcutDialog.dataset.editingId = id;
+    
+    // 填充表单
+    dom.shortcutDialogTitle.textContent = '编辑快捷方式';
+    dom.shortcutTitleInput.value = sc.title || '';
+    dom.shortcutUrlInput.value = sc.url || '';
+    dom.shortcutIconInput.value = sc.icon || '🔗';
+    dom.shortcutTagsInput.value = (sc.tags || []).join(', ');
+    
+    // 更新分类选择下拉框
+    dom.shortcutCategorySelect.innerHTML = '<option value="">无分类</option>';
+    state.categories.forEach(category => {
+      const option = document.createElement('option');
+      option.value = category.id;
+      option.textContent = category.name;
+      if (category.id === sc.categoryId) {
+        option.selected = true;
       }
-    }else if(action==='edit'){
-      const title = prompt('名称', sc.title) || sc.title;
-      const url = prompt('链接', sc.url) || sc.url;
-      const icon = prompt('图标', sc.icon || '🔗') || sc.icon;
-      const tags = prompt('标签（用逗号分隔）', (sc.tags || []).join(', ')) || '';
-      Object.assign(sc, { 
-        title, 
-        url, 
-        icon, 
-        iconUrl: getFaviconUrl(url),
-        tags: tags.split(',').map(t => t.trim()).filter(t => t)
-      });
-      persist(STORAGE_KEYS.shortcuts, state.shortcuts);
-      renderShortcuts();
-    }else if(action==='move'){
-      // 选择分类
-      const categorySelect = document.createElement('select');
-      categorySelect.innerHTML = '<option value="">无分类</option>';
-      state.categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category.id;
-        option.textContent = category.name;
-        if (category.id === sc.categoryId) option.selected = true;
-        categorySelect.appendChild(option);
-      });
-      
-      if (confirm('选择目标分类：\n' + categorySelect.outerHTML)) {
-        sc.categoryId = categorySelect.value || null;
-        persist(STORAGE_KEYS.shortcuts, state.shortcuts);
-        renderShortcuts();
-        renderCategories();
-      }
+      dom.shortcutCategorySelect.appendChild(option);
+    });
+    
+    // 编辑模式下显示删除按钮
+    dom.deleteShortcut.style.display = 'block';
+    
+    // 显示对话框
+    dom.shortcutDialog.showModal();
+  }
+
+  function saveShortcut(){
+    const editingId = dom.shortcutDialog.dataset.editingId;
+    const title = dom.shortcutTitleInput.value.trim();
+    const url = dom.shortcutUrlInput.value.trim();
+    const icon = dom.shortcutIconInput.value.trim() || '🔗';
+    const tags = dom.shortcutTagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+    const categoryId = dom.shortcutCategorySelect.value || null;
+    
+    if (!title) {
+      notify('请输入快捷方式名称');
+      return;
     }
+    
+    if (!url) {
+      notify('请输入链接地址');
+      return;
+    }
+    
+    if (editingId) {
+      // 编辑现有快捷方式
+      const sc = state.shortcuts.find(s => s.id === editingId);
+      if (!sc) return;
+      
+      Object.assign(sc, {
+        title,
+        url,
+        icon,
+        iconUrl: getFaviconUrl(url),
+        tags,
+        categoryId
+      });
+    } else {
+      // 创建新快捷方式
+      const id = `sc-${Date.now()}`;
+      const newShortcut = {
+        id,
+        title,
+        url,
+        icon,
+        iconUrl: getFaviconUrl(url),
+        categoryId: categoryId || state.ui.currentCategory,
+        tags,
+        order: state.shortcuts.length,
+        pinned: false,
+        visitCount: 0,
+        lastVisited: null
+      };
+      
+      state.shortcuts.push(newShortcut);
+    }
+    
+    persist(STORAGE_KEYS.shortcuts, state.shortcuts);
+    renderShortcuts();
+    renderCategories();
+    dom.shortcutDialog.close();
+  }
+
+  function deleteShortcut(){
+    const editingId = dom.shortcutDialog.dataset.editingId;
+    if (!editingId) {
+      notify('无法删除：这不是一个已存在的快捷方式');
+      return;
+    }
+    
+    if (!confirm('确定要删除这个快捷方式吗？')) {
+      return;
+    }
+    
+    state.shortcuts = state.shortcuts.filter(s => s.id !== editingId);
+    persist(STORAGE_KEYS.shortcuts, state.shortcuts);
+    renderShortcuts();
+    renderCategories();
+    dom.shortcutDialog.close();
   }
 
   function enableDnD(){
