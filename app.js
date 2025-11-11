@@ -139,6 +139,9 @@
   applyWallpaper(state.settings.wallpaperUrl, state.settings.blur);
   applyMono(state.settings.mono);
   updateEngineIndicator('default');
+  // 设置"已置顶"为默认选中状态
+  state.ui.activeFilters.push('pinned');
+  dom.filterPinned.classList.add('active');
   renderCategories();
   renderShortcuts();
   tickClock();
@@ -293,6 +296,13 @@
     // 更新标题
     const category = categoryId ? state.categories.find(c => c.id === categoryId) : null;
     dom.currentCategoryTitle.textContent = category ? category.name : '所有快捷方式';
+    
+    // 自动取消"置顶"过滤器的选中状态
+    const pinnedIndex = state.ui.activeFilters.indexOf('pinned');
+    if (pinnedIndex > -1) {
+      state.ui.activeFilters.splice(pinnedIndex, 1);
+      dom.filterPinned.classList.remove('active');
+    }
     
     // 重新渲染快捷方式
     renderShortcuts();
