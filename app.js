@@ -1032,23 +1032,31 @@
   }
 
   function clearAllShortcuts(){
-    if (state.shortcuts.length === 0) {
-      alert('没有快捷方式需要清空');
+    if (state.shortcuts.length === 0 && state.categories.length === DEFAULT_CATEGORIES.length) {
+      alert('没有快捷方式和分类需要清空');
       return;
     }
     
-    const count = state.shortcuts.length;
-    const confirmMessage = `确定要清空所有 ${count} 个快捷方式吗？\n\n此操作不可撤销！`;
+    const shortcutsCount = state.shortcuts.length;
+    const categoriesCount = state.categories.length;
+    const confirmMessage = `确定要清空所有 ${shortcutsCount} 个快捷方式和 ${categoriesCount} 个分类吗？\n\n此操作不可撤销！`;
     
     if (confirm(confirmMessage)) {
       // 清空快捷方式数组
       state.shortcuts = [];
       
+      // 重置分类为默认分类
+      state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      
       // 保存到本地存储
       persist(STORAGE_KEYS.shortcuts, state.shortcuts);
+      persist(STORAGE_KEYS.categories, state.categories);
       
       // 清空选中的快捷方式
       state.ui.selectedShortcuts.clear();
+      
+      // 重置当前分类选择
+      state.ui.currentCategory = null;
       
       // 重新渲染界面
       renderShortcuts();
@@ -1058,7 +1066,7 @@
       dom.settings.close();
       
       // 显示成功消息
-      notify(`已清空 ${count} 个快捷方式`);
+      notify(`已清空 ${shortcutsCount} 个快捷方式和 ${categoriesCount} 个分类`);
     }
   }
 
