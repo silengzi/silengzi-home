@@ -882,6 +882,45 @@ dialog#settings .settings-form menu button[value="cancel"]:hover {
   box-sizing: border-box;
   padding: 10px 30px;
 }
+dialog#settings .data-management-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+dialog#settings #btn-export-bookmarks {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+dialog#settings #btn-export-bookmarks:hover {
+  background: #7c3aed;
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+dialog#settings #btn-export-bookmarks:active {
+  background: #6d28d9;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+:root.light dialog#settings #btn-export-bookmarks {
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.15);
+}
+
+:root.light dialog#settings #btn-export-bookmarks:hover {
+  box-shadow: 0 4px 8px rgba(124, 58, 237, 0.25);
+}
+
 dialog#settings .danger-btn {
   background: var(--danger);
   color: #fff;
@@ -892,7 +931,6 @@ dialog#settings .danger-btn {
   cursor: pointer;
   transition: background-color 0.18s;
   font-weight: 600;
-  margin-left: 8px;
 }
 dialog#settings .danger-btn:hover {
   background: #c82333;

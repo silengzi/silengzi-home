@@ -65,6 +65,7 @@
     batchDelete: document.getElementById('btn-batch-delete'),
     // HTML书签导入相关DOM
     importBookmarks: document.getElementById('btn-import-bookmarks'),
+    exportBookmarks: document.getElementById('btn-export-bookmarks'),
     bookmarkImportDialog: document.getElementById('bookmark-import-dialog'),
     fileDropZone: document.getElementById('file-drop-zone'),
     bookmarkFileInput: document.getElementById('bookmark-file-input'),
@@ -214,6 +215,7 @@
   
   // HTML书签导入事件
   dom.importBookmarks.addEventListener('click', () => dom.bookmarkImportDialog.showModal());
+  dom.exportBookmarks.addEventListener('click', exportBookmarksToHTML);
   dom.fileDropZone.addEventListener('click', () => dom.bookmarkFileInput.click());
   dom.bookmarkFileInput.addEventListener('change', handleFileSelect);
   dom.fileDropZone.addEventListener('dragover', handleDragOver);
@@ -1830,6 +1832,184 @@
     // 重置按钮
     dom.startImport.disabled = true;
     dom.startImport.textContent = '开始导入';
+  }
+
+  // HTML书签导出功能
+  function exportBookmarksToHTML() {
+    if (state.shortcuts.length === 0) {
+      notify('没有快捷方式可导出');
+      return;
+    }
+
+    // 构建分类树结构
+    const categoryMap = new Map();
+    const rootCategories = [];
+    
+    // 先创建所有分类的映射
+    state.categories.forEach(category => {
+      categoryMap.set(category.id, {
+        ...category,
+        shortcuts: [],
+        children: []
+      });
+    });
+    
+    // 构建分类层级关系
+    state.categories.forEach(category => {
+      const categoryNode = categoryMap.get(category.id);
+      if (category.parentId) {
+        const parent = categoryMap.get(category.parentId);
+        if (parent) {
+          parent.children.push(categoryNode);
+        } else {
+          rootCategories.push(categoryNode);
+        }
+      } else {
+        rootCategories.push(categoryNode);
+      }
+    });
+    
+    // 按order排序
+    function sortByOrder(arr) {
+      return arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+    }
+    sortByOrder(rootCategories);
+    categoryMap.forEach(cat => sortByOrder(cat.children));
+    
+    // 将快捷方式分配到对应分类
+    let hasUncategorized = false;
+    state.shortcuts.forEach(shortcut => {
+      if (shortcut.categoryId) {
+        const category = categoryMap.get(shortcut.categoryId);
+        if (category) {
+          category.shortcuts.push(shortcut);
+        } else {
+          // 分类不存在，当作未分类处理
+          hasUncategorized = true;
+          if (!categoryMap.has('_uncategorized')) {
+            const uncategorized = {
+              id: '_uncategorized',
+              name: '未分类',
+              icon: '📁',
+              shortcuts: [],
+              children: []
+            };
+            categoryMap.set('_uncategorized', uncategorized);
+            rootCategories.push(uncategorized);
+          }
+          categoryMap.get('_uncategorized').shortcuts.push(shortcut);
+        }
+      } else {
+        // 未分类的快捷方式，创建一个虚拟分类
+        hasUncategorized = true;
+        if (!categoryMap.has('_uncategorized')) {
+          const uncategorized = {
+            id: '_uncategorized',
+            name: '未分类',
+            icon: '📁',
+            shortcuts: [],
+            children: []
+          };
+          categoryMap.set('_uncategorized', uncategorized);
+          rootCategories.push(uncategorized);
+        }
+        categoryMap.get('_uncategorized').shortcuts.push(shortcut);
+      }
+    });
+    
+    // 按order排序快捷方式
+    categoryMap.forEach(cat => {
+      cat.shortcuts.sort((a, b) => (a.order || 0) - (b.order || 0));
+    });
+    
+    // 生成HTML内容
+    const now = Math.floor(Date.now() / 1000);
+    let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><H3 ADD_DATE="${now}" LAST_MODIFIED="0" PERSONAL_TOOLBAR_FOLDER="true">书签栏</H3>
+    <DL><p>
+`;
+    
+    // 递归生成分类和书签
+    function generateCategoryHTML(category, indent = '        ') {
+      let result = '';
+      
+      // 生成分类标题（包括未分类）
+      result += `${indent}<DT><H3 ADD_DATE="${now}" LAST_MODIFIED="0">${escapeHtml(category.name)}</H3>\n`;
+      result += `${indent}<DL><p>\n`;
+      
+      // 生成子分类
+      category.children.forEach(child => {
+        result += generateCategoryHTML(child, indent + '    ');
+      });
+      
+      // 生成书签
+      category.shortcuts.forEach(shortcut => {
+        const addDate = shortcut.lastVisited 
+          ? Math.floor(new Date(shortcut.lastVisited).getTime() / 1000)
+          : now;
+        
+        let iconAttr = '';
+        if (shortcut.iconUrl && shortcut.iconUrl.startsWith('data:')) {
+          iconAttr = ` ICON="${shortcut.iconUrl}"`;
+        } else if (shortcut.icon && !shortcut.iconUrl) {
+          // 如果是emoji，不添加ICON属性（浏览器书签格式不支持emoji作为ICON）
+          // 但可以尝试获取favicon
+          const faviconUrl = getFaviconUrl(shortcut.url);
+          if (faviconUrl) {
+            iconAttr = ` ICON="${faviconUrl}"`;
+          }
+        } else if (shortcut.iconUrl) {
+          iconAttr = ` ICON="${shortcut.iconUrl}"`;
+        }
+        
+        const title = escapeHtml(shortcut.title || shortcut.url);
+        const url = escapeHtml(shortcut.url);
+        result += `${indent}    <DT><A HREF="${url}" ADD_DATE="${addDate}"${iconAttr}>${title}</A>\n`;
+      });
+      
+      // 关闭分类
+      result += `${indent}</DL><p>\n`;
+      
+      return result;
+    }
+    
+    // 生成所有分类
+    rootCategories.forEach(category => {
+      html += generateCategoryHTML(category);
+    });
+    
+    // 关闭根DL
+    html += `    </DL><p>
+</DL><p>
+`;
+    
+    // 创建下载
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+    a.href = url;
+    a.download = `bookmarks_${dateStr}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    notify(`已导出 ${state.shortcuts.length} 个快捷方式`);
+  }
+  
+  // HTML转义函数
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   // Prefill settings UI
